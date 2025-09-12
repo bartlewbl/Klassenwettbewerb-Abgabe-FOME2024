@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team-Wettbewerb - Lüftungsoptimierung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css', v=version) }}">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="{{ url_for('static', filename='img/schule_am_schloss_logo.png', v=version) }}" alt="Logo" class="logo">
+            <h1>Klassen-Wettbewerb: Lüftungsoptimierung</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="competition-intro">
+            <h2>🏆 Live-Klassen-Wettbewerb</h2>
+            <p>Zwei Klassen kämpfen um die beste Lüftungsoptimierung durch Minimierung des Energieverbrauchs, Maximierung der Luftqualität und Aufrechterhaltung der perfekten Temperatur.</p>
+            <div class="competition-timer">
+                <span id="timer">Live-Daten werden alle 30 Sekunden aktualisiert</span>
+            </div>
+        </section>
+
+        <div class="teams-container">
+            <!-- Team A -->
+            <div class="team-card team-a">
+                <div class="team-header">
+                    <h3>🔵 Klasse 10a</h3>
+                    <div class="team-score">
+                        <span class="score-label">Gesamtpunktzahl:</span>
+                        <span class="score-value" id="team-a-score">{{ team_a.total_score }}</span>
+                    </div>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card energy">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-label">Energieverbrauch</div>
+                        <div class="metric-value" id="team-a-energy">{{ "%.2f"|format(team_a.energy_consumption) }} kWh</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill" style="width: {{ (team_a.energy_consumption / 4.0) * 100 }}%"></div>
+                        </div>
+                        <div class="metric-status">
+                            {% if team_a.energy_consumption < 2.5 %}
+                                <span class="status-good">Sehr gut!</span>
+                            {% elif team_a.energy_consumption < 3.0 %}
+                                <span class="status-medium">Gut</span>
+                            {% else %}
+                                <span class="status-poor">Verbesserung nötig</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="metric-card air-quality">
+                        <div class="metric-icon">🌬️</div>
+                        <div class="metric-label">Luftqualität</div>
+                        <div class="metric-value" id="team-a-air">{{ "%.1f"|format(team_a.air_quality_score) }}/100</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill" style="width: {{ team_a.air_quality_score }}%"></div>
+                        </div>
+                        <div class="metric-status">
+                            {% if team_a.air_quality_score > 90 %}
+                                <span class="status-good">Ausgezeichnet!</span>
+                            {% elif team_a.air_quality_score > 80 %}
+                                <span class="status-medium">Gut</span>
+                            {% else %}
+                                <span class="status-poor">Verbesserung nötig</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="metric-card temperature">
+                        <div class="metric-icon">🌡️</div>
+                        <div class="metric-label">Temperaturabweichung</div>
+                        <div class="metric-value" id="team-a-temp">{{ "%.1f"|format(team_a.temperature_deviation) }}°C</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill" style="width: {{ (team_a.temperature_deviation / 3.0) * 100 }}%"></div>
+                        </div>
+                        <div class="metric-status">
+                            {% if team_a.temperature_deviation < 1.0 %}
+                                <span class="status-good">Perfekt!</span>
+                            {% elif team_a.temperature_deviation < 2.0 %}
+                                <span class="status-medium">Akzeptabel</span>
+                            {% else %}
+                                <span class="status-poor">Zu hoch</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team B -->
+            <div class="team-card team-b">
+                <div class="team-header">
+                    <h3>🔴 Klasse 10b</h3>
+                    <div class="team-score">
+                        <span class="score-label">Gesamtpunktzahl:</span>
+                        <span class="score-value" id="team-b-score">{{ team_b.total_score }}</span>
+                    </div>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card energy">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-label">Energieverbrauch</div>
+                        <div class="metric-value" id="team-b-energy">{{ "%.2f"|format(team_b.energy_consumption) }} kWh</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill" style="width: {{ (team_b.energy_consumption / 4.0) * 100 }}%"></div>
+                        </div>
+                        <div class="metric-status">
+                            {% if team_b.energy_consumption < 2.5 %}
+                                <span class="status-good">Sehr gut!</span>
+                            {% elif team_b.energy_consumption < 3.0 %}
+                                <span class="status-medium">Gut</span>
+                            {% else %}
+                                <span class="status-poor">Verbesserung nötig</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="metric-card air-quality">
+                        <div class="metric-icon">🌬️</div>
+                        <div class="metric-label">Luftqualität</div>
+                        <div class="metric-value" id="team-b-air">{{ "%.1f"|format(team_b.air_quality_score) }}/100</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill" style="width: {{ team_b.air_quality_score }}%"></div>
+                        </div>
+                        <div class="metric-status">
+                            {% if team_b.air_quality_score > 90 %}
+                                <span class="status-good">Ausgezeichnet!</span>
+                            {% elif team_b.air_quality_score > 80 %}
+                                <span class="status-medium">Gut</span>
+                            {% else %}
+                                <span class="status-poor">Verbesserung nötig</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="metric-card temperature">
+                        <div class="metric-icon">🌡️</div>
+                        <div class="metric-label">Temperaturabweichung</div>
+                        <div class="metric-value" id="team-b-temp">{{ "%.1f"|format(team_b.temperature_deviation) }}°C</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill" style="width: {{ (team_b.temperature_deviation / 3.0) * 100 }}%"></div>
+                        </div>
+                        <div class="metric-status">
+                            {% if team_b.temperature_deviation < 1.0 %}
+                                <span class="status-good">Perfekt!</span>
+                            {% elif team_b.temperature_deviation < 2.0 %}
+                                <span class="status-medium">Akzeptabel</span>
+                            {% else %}
+                                <span class="status-poor">Zu hoch</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="winner-section">
+            <div class="winner-card">
+                <h3>🏆 Aktueller Gewinner</h3>
+                <div class="winner-name" id="winner-display">
+                    {% if winner == "Team A" %}
+                        <span class="winner-team-a">🔵 Klasse 10a</span>
+                    {% elif winner == "Team B" %}
+                        <span class="winner-team-b">🔴 Klasse 10b</span>
+                    {% else %}
+                        <span class="winner-tie">🤝 Unentschieden</span>
+                    {% endif %}
+                </div>
+                <p>Der Gewinner wird basierend auf der Gesamtpunktzahl ermittelt, die sich aus Energieeffizienz, Luftqualität und Temperaturgenauigkeit zusammensetzt.</p>
+            </div>
+        </section>
+
+        <section class="controls">
+            <button class="button" onclick="window.location.href='/';">Zurück zur Hauptseite</button>
+            <button class="button" onclick="refreshData();">Daten aktualisieren</button>
+        </section>
+    </div>
+
+    <script>
+        let updateCountdown = 30;
+        
+        function updateTimer() {
+            const timerElement = document.getElementById('timer');
+            if (updateCountdown > 0) {
+                timerElement.textContent = `Nächste Aktualisierung in ${updateCountdown} Sekunden`;
+                updateCountdown--;
+            } else {
+                timerElement.textContent = 'Aktualisiere Daten...';
+                refreshData();
+                updateCountdown = 30;
+            }
+        }
+
+        function refreshData() {
+            // Add updating class to show progress
+            document.querySelectorAll('.metric-card').forEach(card => {
+                card.classList.add('updating');
+            });
+            
+            fetch('/team-competition?refresh=' + new Date().getTime())
+                .then(response => response.text())
+                .then(html => {
+                    // Parse the HTML and extract new values
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Update Team A values
+                    document.getElementById('team-a-score').textContent = doc.getElementById('team-a-score').textContent;
+                    document.getElementById('team-a-energy').textContent = doc.getElementById('team-a-energy').textContent;
+                    document.getElementById('team-a-air').textContent = doc.getElementById('team-a-air').textContent;
+                    document.getElementById('team-a-temp').textContent = doc.getElementById('team-a-temp').textContent;
+                    
+                    // Update Team B values
+                    document.getElementById('team-b-score').textContent = doc.getElementById('team-b-score').textContent;
+                    document.getElementById('team-b-energy').textContent = doc.getElementById('team-b-energy').textContent;
+                    document.getElementById('team-b-air').textContent = doc.getElementById('team-b-air').textContent;
+                    document.getElementById('team-b-temp').textContent = doc.getElementById('team-b-temp').textContent;
+                    
+                    // Update winner
+                    const winnerDisplay = doc.getElementById('winner-display');
+                    document.getElementById('winner-display').innerHTML = winnerDisplay.innerHTML;
+                    
+                    // Update progress bars (sliders) for Team A
+                    updateProgressBars('team-a', doc);
+                    
+                    // Update progress bars (sliders) for Team B
+                    updateProgressBars('team-b', doc);
+                    
+                    // Add animation effect
+                    document.querySelectorAll('.metric-value').forEach(el => {
+                        el.style.animation = 'pulse 0.5s ease-in-out';
+                        setTimeout(() => {
+                            el.style.animation = '';
+                        }, 500);
+                    });
+                    
+                    // Remove updating class after animation completes
+                    setTimeout(() => {
+                        document.querySelectorAll('.metric-card').forEach(card => {
+                            card.classList.remove('updating');
+                        });
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error refreshing data:', error);
+                    // Remove updating class on error
+                    document.querySelectorAll('.metric-card').forEach(card => {
+                        card.classList.remove('updating');
+                    });
+                });
+        }
+        
+        function updateProgressBars(teamPrefix, doc) {
+            // Get the energy consumption value and calculate progress bar width
+            const energyElement = doc.getElementById(teamPrefix + '-energy');
+            if (energyElement) {
+                const energyText = energyElement.textContent;
+                const energyValue = parseFloat(energyText.replace(' kWh', ''));
+                // Energy: 2.0 kWh = 0%, 4.0 kWh = 100% (lower is better, so invert)
+                const energyProgress = Math.min(100, Math.max(0, ((energyValue - 2.0) / 2.0) * 100));
+                
+                // Update energy progress bar
+                const energyBar = document.querySelector(`#${teamPrefix}-energy`).closest('.metric-card').querySelector('.bar-fill');
+                if (energyBar) {
+                    energyBar.style.width = energyProgress + '%';
+                    energyBar.style.transition = 'width 0.5s ease';
+                }
+            }
+            
+            // Get the air quality value and calculate progress bar width
+            const airElement = doc.getElementById(teamPrefix + '-air');
+            if (airElement) {
+                const airText = airElement.textContent;
+                const airValue = parseFloat(airText.split('/')[0]);
+                // Air quality: 60 = 0%, 95 = 100% (higher is better) - based on actual CO2 ranges
+                const airProgress = Math.min(100, Math.max(0, ((airValue - 60) / 35) * 100));
+                
+                // Update air quality progress bar
+                const airBar = document.querySelector(`#${teamPrefix}-air`).closest('.metric-card').querySelector('.bar-fill');
+                if (airBar) {
+                    airBar.style.width = airProgress + '%';
+                    airBar.style.transition = 'width 0.5s ease';
+                }
+            }
+            
+            // Get the temperature deviation value and calculate progress bar width
+            const tempElement = doc.getElementById(teamPrefix + '-temp');
+            if (tempElement) {
+                const tempText = tempElement.textContent;
+                const tempValue = parseFloat(tempText.replace('°C', ''));
+                // Temperature: 0°C = 0%, 8°C = 100% (lower is better, so invert) - based on actual temp range
+                const tempProgress = Math.min(100, Math.max(0, (tempValue / 8.0) * 100));
+                
+                // Update temperature progress bar
+                const tempBar = document.querySelector(`#${teamPrefix}-temp`).closest('.metric-card').querySelector('.bar-fill');
+                if (tempBar) {
+                    tempBar.style.width = tempProgress + '%';
+                    tempBar.style.transition = 'width 0.5s ease';
+                }
+            }
+        }
+
+        // Start timer
+        setInterval(updateTimer, 1000);
+        
+        // Initial countdown
+        updateTimer();
+        
+        // Add smooth progress bar animations on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars on initial load
+            setTimeout(() => {
+                document.querySelectorAll('.bar-fill').forEach(bar => {
+                    bar.style.transition = 'width 1s ease-in-out';
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

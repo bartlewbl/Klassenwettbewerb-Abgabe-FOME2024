@@ -723,19 +723,19 @@ def team_competition():
             current_co2 = current_sensor_data['co2']
             current_humidity = current_sensor_data['humidity']
             
-            # Team A Daten basierend auf echten Sensordaten - mit realistischen Bereichen
+            # Team A Daten basierend auf echten Sensordaten
             team_a_data = {
-                'energy_consumption': round(max(2.0, min(4.0, 2.2 + (current_co2 - 400) / 800)), 2),  # kWh basierend auf CO2 (realistischer Bereich)
-                'air_quality_score': round(max(60, min(95, 100 - (current_co2 - 400) / 40)), 1),     # Score basierend auf CO2 (CO2 400-2000ppm = 95-60)
-                'temperature_deviation': round(abs(current_temp - 20.0), 1),  # Abweichung von optimaler Temperatur (20°C = Mitte des Bereichs)
+                'energy_consumption': round(max(2.0, min(4.0, 2.5 + (current_co2 - 600) / 200)), 2),  # kWh basierend auf CO2
+                'air_quality_score': round(max(60, min(100, 100 - (current_co2 - 400) / 8)), 1),     # Score basierend auf CO2
+                'temperature_deviation': round(abs(current_temp - 22.0), 1),  # Abweichung von optimaler Temperatur (22°C)
                 'total_score': 0
             }
             
             # Team B Daten mit leichten Variationen (simuliert andere Klasse)
             team_b_data = {
-                'energy_consumption': round(max(2.0, min(4.0, 2.0 + (current_co2 - 400) / 750)), 2),  # kWh basierend auf CO2 (leicht besser)
-                'air_quality_score': round(max(60, min(95, 100 - (current_co2 - 400) / 38)), 1),   # Score basierend auf CO2 (leicht besser)
-                'temperature_deviation': round(abs(current_temp - 19.5), 1),  # Abweichung von optimaler Temperatur (19.5°C)
+                'energy_consumption': round(max(2.0, min(4.0, 2.3 + (current_co2 - 600) / 180)), 2),  # kWh basierend auf CO2
+                'air_quality_score': round(max(60, min(100, 100 - (current_co2 - 400) / 7.5)), 1),   # Score basierend auf CO2
+                'temperature_deviation': round(abs(current_temp - 21.5), 1),  # Abweichung von optimaler Temperatur (21.5°C)
                 'total_score': 0
             }
             
@@ -745,32 +745,25 @@ def team_competition():
             # Fallback auf simulierte Daten wenn keine echten Daten verfügbar
             logging.warning("Keine echten Sensordaten verfügbar, verwende Fallback-Daten")
             team_a_data = {
-                'energy_consumption': round(random.uniform(2.0, 3.2), 2),
-                'air_quality_score': round(random.uniform(75, 90), 1),
-                'temperature_deviation': round(random.uniform(0.8, 2.2), 1),
+                'energy_consumption': round(random.uniform(2.1, 3.5), 2),
+                'air_quality_score': round(random.uniform(85, 98), 1),
+                'temperature_deviation': round(random.uniform(0.5, 2.0), 1),
                 'total_score': 0
             }
             
             team_b_data = {
-                'energy_consumption': round(random.uniform(1.9, 3.0), 2),
-                'air_quality_score': round(random.uniform(78, 92), 1),
-                'temperature_deviation': round(random.uniform(0.6, 2.0), 1),
+                'energy_consumption': round(random.uniform(2.0, 3.8), 2),
+                'air_quality_score': round(random.uniform(80, 95), 1),
+                'temperature_deviation': round(random.uniform(0.3, 2.5), 1),
                 'total_score': 0
             }
         
-        # Berechne Gesamtpunktzahl - verbesserte Formel für realistischere Scores
+        # Berechne Gesamtpunktzahl
         def calculate_score(energy, air_quality, temp_deviation):
-            # Energie: 2.0 kWh = 100 Punkte, 4.0 kWh = 60 Punkte (weniger hart)
-            energy_score = max(60, 100 - (energy - 2.0) * 20)
-            
-            # Luftqualität: Direkt die Luftqualität als Punkte (bereits gut)
-            air_quality_score = air_quality
-            
-            # Temperatur: 0°C Abweichung = 100 Punkte, 3°C Abweichung = 70 Punkte (weniger hart)
-            temp_score = max(70, 100 - temp_deviation * 10)
-            
-            # Gewichtete Summe: Luftqualität ist wichtiger
-            return (energy_score * 0.25 + air_quality_score * 0.5 + temp_score * 0.25)
+            energy_score = max(0, 100 - (energy - 2.0) * 50)  # 2.0 kWh = 100 Punkte, 4.0 kWh = 0 Punkte
+            air_quality_score = air_quality  # Direkt die Luftqualität als Punkte
+            temp_score = max(0, 100 - temp_deviation * 30)  # 0°C Abweichung = 100 Punkte, 3.3°C Abweichung = 0 Punkte
+            return (energy_score + air_quality_score + temp_score) / 3
         
         team_a_data['total_score'] = round(calculate_score(
             team_a_data['energy_consumption'], 
