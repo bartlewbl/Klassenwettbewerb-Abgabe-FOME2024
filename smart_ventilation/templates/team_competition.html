@@ -21,6 +21,12 @@
             <p>Zwei Klassen kämpfen um die beste Lüftungsoptimierung durch Minimierung des Energieverbrauchs, Maximierung der Luftqualität und Aufrechterhaltung der perfekten Temperatur.</p>
             <div class="competition-timer">
                 <span id="timer">Live-Daten werden alle 30 Sekunden aktualisiert</span>
+                <div class="data-source">
+                    <span id="data-source">Datenquelle: {{ data_source if data_source else 'Live-MQTT' }}</span>
+                    <div class="data-info">
+                        <span>🔵 Klasse 10a: Aktuelle Daten | 🔴 Klasse 10b: Vorherige Daten (zeitversetzt)</span>
+                    </div>
+                </div>
             </div>
         </section>
 

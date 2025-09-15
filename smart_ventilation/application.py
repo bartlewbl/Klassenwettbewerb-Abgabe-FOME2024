@@ -665,15 +665,22 @@ def get_latest_data():
 @app.route("/sensor_data", methods=["GET"])
 def get_sensor_data():
     """
-    Gibt die aktuellen Sensordaten aus dem Simulator zurück.
+    Gibt die aktuellen Sensordaten zurück - bevorzugt Live-MQTT-Daten.
     """
     try:
-        current_data = sensor_simulator.get_current_data()
+        current_data = mqtt_client.get_current_live_data()
+        data_source = "Live-MQTT"
+        
+        if not current_data:
+            current_data = sensor_simulator.get_current_data()
+            data_source = "Sensor-Simulator"
+        
         if current_data:
             return jsonify({
                 "status": "success",
                 "data": current_data,
-                "message": "Echte Sensordaten geladen"
+                "data_source": data_source,
+                "message": f"Sensordaten geladen von {data_source}"
             })
         else:
             return jsonify({
@@ -714,32 +721,44 @@ def team_competition():
     Verwendet echte Sensordaten für realistische Wettbewerbsdaten.
     """
     try:
-        # Hole aktuelle echte Sensordaten
-        current_sensor_data = sensor_simulator.get_current_data()
+        current_sensor_data = mqtt_client.get_current_live_data()
+        
+        if not current_sensor_data:
+            logging.info("Keine Live-MQTT-Daten verfügbar, verwende Sensor-Simulator als Fallback")
+            current_sensor_data = sensor_simulator.get_current_data()
         
         if current_sensor_data:
-            # Verwende echte Sensordaten für realistische Wettbewerbsdaten
-            current_temp = current_sensor_data['temperature']
-            current_co2 = current_sensor_data['co2']
-            current_humidity = current_sensor_data['humidity']
+            team_a_temp = current_sensor_data['temperature']
+            team_a_co2 = current_sensor_data['co2']
+            team_a_humidity = current_sensor_data['humidity']
             
-            # Team A Daten basierend auf echten Sensordaten - mit realistischen Bereichen
+            team_b_data_staggered = mqtt_client.get_staggered_data()
+            if team_b_data_staggered:
+                team_b_temp = team_b_data_staggered['temperature']
+                team_b_co2 = team_b_data_staggered['co2']
+                team_b_humidity = team_b_data_staggered['humidity']
+            else:
+                team_b_temp = team_a_temp
+                team_b_co2 = team_a_co2
+                team_b_humidity = team_a_humidity
+            
             team_a_data = {
-                'energy_consumption': round(max(2.0, min(4.0, 2.2 + (current_co2 - 400) / 800)), 2),  # kWh basierend auf CO2 (realistischer Bereich)
-                'air_quality_score': round(max(60, min(95, 100 - (current_co2 - 400) / 40)), 1),     # Score basierend auf CO2 (CO2 400-2000ppm = 95-60)
-                'temperature_deviation': round(abs(current_temp - 20.0), 1),  # Abweichung von optimaler Temperatur (20°C = Mitte des Bereichs)
+                'energy_consumption': round(max(2.0, min(4.0, 2.0 + (team_a_co2 - 400) / 800)), 2),
+                'air_quality_score': round(max(60, min(95, 100 - (team_a_co2 - 400) / 40)), 1),
+                'temperature_deviation': round(abs(team_a_temp - 20.0), 1),
                 'total_score': 0
             }
             
-            # Team B Daten mit leichten Variationen (simuliert andere Klasse)
             team_b_data = {
-                'energy_consumption': round(max(2.0, min(4.0, 2.0 + (current_co2 - 400) / 750)), 2),  # kWh basierend auf CO2 (leicht besser)
-                'air_quality_score': round(max(60, min(95, 100 - (current_co2 - 400) / 38)), 1),   # Score basierend auf CO2 (leicht besser)
-                'temperature_deviation': round(abs(current_temp - 19.5), 1),  # Abweichung von optimaler Temperatur (19.5°C)
+                'energy_consumption': round(max(2.0, min(4.0, 2.0 + (team_b_co2 - 400) / 800)), 2),
+                'air_quality_score': round(max(60, min(95, 100 - (team_b_co2 - 400) / 40)), 1),
+                'temperature_deviation': round(abs(team_b_temp - 20.0), 1),
                 'total_score': 0
             }
             
-            logging.info(f"Echte Sensordaten verwendet: Temp={current_temp}°C, CO2={current_co2}ppm, Humidity={current_humidity}%")
+            # Bestimme Datenquelle für Logging
+            data_source = "Live-MQTT" if mqtt_client.get_current_live_data() else "Sensor-Simulator"
+            logging.info(f"Sensordaten verwendet ({data_source}): Team A - Temp={team_a_temp}°C, CO2={team_a_co2}ppm | Team B - Temp={team_b_temp}°C, CO2={team_b_co2}ppm")
             
         else:
             # Fallback auf simulierte Daten wenn keine echten Daten verfügbar
@@ -758,15 +777,13 @@ def team_competition():
                 'total_score': 0
             }
         
-        # Berechne Gesamtpunktzahl - verbesserte Formel für realistischere Scores
+
         def calculate_score(energy, air_quality, temp_deviation):
-            # Energie: 2.0 kWh = 100 Punkte, 4.0 kWh = 60 Punkte (weniger hart)
             energy_score = max(60, 100 - (energy - 2.0) * 20)
             
-            # Luftqualität: Direkt die Luftqualität als Punkte (bereits gut)
             air_quality_score = air_quality
             
-            # Temperatur: 0°C Abweichung = 100 Punkte, 3°C Abweichung = 70 Punkte (weniger hart)
+
             temp_score = max(70, 100 - temp_deviation * 10)
             
             # Gewichtete Summe: Luftqualität ist wichtiger
@@ -789,6 +806,9 @@ def team_competition():
         if team_a_data['total_score'] == team_b_data['total_score']:
             winner = "Unentschieden"
         
+
+        data_source = "Live-MQTT" if mqtt_client.get_current_live_data() else "Sensor-Simulator"
+        
         logging.info(f"Team A Score: {team_a_data['total_score']}, Team B Score: {team_b_data['total_score']}, Gewinner: {winner}")
         
         return render_template(
@@ -796,6 +816,7 @@ def team_competition():
             team_a=team_a_data,
             team_b=team_b_data,
             winner=winner,
+            data_source=data_source,
             current_time=int(time.time()),
             version=time.time()
         )
@@ -812,12 +833,12 @@ def team_competition():
             team_a=team_a_data,
             team_b=team_b_data,
             winner=winner,
+            data_source="Fallback-Daten",
             current_time=int(time.time()),
             version=time.time()
         )
 
 
 if __name__ == "__main__":
-    # Anwendung im Debug-Modus starten
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)

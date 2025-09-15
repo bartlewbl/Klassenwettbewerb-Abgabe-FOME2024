@@ -431,6 +431,66 @@ class MQTTClient:
             )
             return []
 
+    def get_current_live_data(self):
+        """
+        Gibt die aktuellen Live-Sensordaten aus dem MQTT-Stream zurück.
+        Verwendet die neuesten Werte aus combined_data für Live-Daten.
+        
+        :return: Dictionary mit aktuellen Sensordaten oder None wenn keine Daten verfügbar
+        """
+        try:
+            with self.data_lock:
+                if not self.combined_data.get('time'):
+                    return None
+                
+                latest_data = {}
+                for key in ['time', 'temperature', 'humidity', 'co2', 'tvoc', 'ambient_temp']:
+                    if self.combined_data.get(key):
+                        latest_data[key] = self.combined_data[key][-1]
+                    else:
+                        latest_data[key] = None
+                
+                if latest_data.get('temperature') is not None and latest_data.get('co2') is not None:
+                    logging.info(f"Live-Sensordaten abgerufen: Temp={latest_data['temperature']}°C, CO2={latest_data['co2']}ppm")
+                    return latest_data
+                else:
+                    logging.warning("Live-Sensordaten unvollständig - wichtige Werte fehlen")
+                    return None
+                    
+        except Exception as e:
+            logging.error(f"Fehler beim Abrufen der Live-Sensordaten: {e}")
+            return None
+
+    def get_staggered_data(self):
+        """
+        Gibt die vorherigen Sensordaten zurück (einen Zeitpunkt zurück).
+        Verwendet für Team B um zeitversetzte Daten zu simulieren.
+        
+        :return: Dictionary mit vorherigen Sensordaten oder None wenn nicht verfügbar
+        """
+        try:
+            with self.data_lock:
+                if not self.combined_data.get('time') or len(self.combined_data.get('time', [])) < 2:
+                    return None
+                
+                staggered_data = {}
+                for key in ['time', 'temperature', 'humidity', 'co2', 'tvoc', 'ambient_temp']:
+                    if self.combined_data.get(key) and len(self.combined_data[key]) >= 2:
+                        staggered_data[key] = self.combined_data[key][-2]  
+                    else:
+                        staggered_data[key] = None
+                
+                if staggered_data.get('temperature') is not None and staggered_data.get('co2') is not None:
+                    logging.info(f"Staggered-Sensordaten abgerufen: Temp={staggered_data['temperature']}°C, CO2={staggered_data['co2']}ppm")
+                    return staggered_data
+                else:
+                    logging.warning("Staggered-Sensordaten unvollständig - wichtige Werte fehlen")
+                    return None
+                    
+        except Exception as e:
+            logging.error(f"Fehler beim Abrufen der Staggered-Sensordaten: {e}")
+            return None
+
     def store_first_topic_data(self, data_point):
         """
         Speichert die Sensordaten aus dem ersten Thema in der PostgreSQL-Datenbank
